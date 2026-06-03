@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=1080, height=1920, initial-scale=1.0"
+    />
+    <title>Ruleta Cummins</title>
+
+    <style>
+      body {
+        background: #000;
+        margin: 0;
+        font-family: Arial;
+        display: flex;
+        justify-content: center;
+      }
+
+      #pantalla {
+        width: 1080px;
+        height: 1920px;
+        background: #da291c;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: white;
+        position: relative;
+      }
+
+      .logo img {
+        width: 250px;
+        margin-top: 10px;
+      }
+
+      .contenedor {
+        position: relative;
+        width: 720px;
+        height: 720px;
+        margin-top: 30px;
+      }
+
+      canvas {
+        width: 100%;
+        height: 100%;
+      }
+
+      .flecha {
+        position: absolute;
+        top: 0px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 30px solid transparent;
+        border-right: 30px solid transparent;
+        border-top: 50px solid rgb(168, 20, 20);
+        z-index: 10;
+      }
+
+      #girar {
+        margin-top: 60px;
+        padding: 20px 60px;
+        font-size: 32px;
+        border: none;
+        border-radius: 12px;
+        background: #1c0202;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      #girar:hover {
+        background: #b80000;
+      }
+
+      .qr-section {
+        flex: 1;
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      p {
+        font-size: 35px;
+        margin-bottom: 15px;
+      }
+
+      .qr {
+        width: 240px;
+        justify-content: center;
+      }
+
+      .redes {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 20px;
+      }
+
+      .redes img {
+        width: 75px;
+      }
+
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        visibility: hidden;
+        opacity: 0;
+        transition: 0.3s;
+        z-index: 1000; /* Solución al problema de la flecha sobre el modal */
+      }
+
+      .modal.show {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      .modal-content {
+        background: white;
+        color: black;
+        padding: 70px 90px;
+        border-radius: 20px;
+        font-size: 36px;
+        font-weight: bold;
+        box-shadow: 0 0 40px gold;
+        text-align: center;
+      }
+
+      /* titulo */
+      .modal-content h3 {
+        font-size: 28px;
+        margin-bottom: 40px;
+      }
+
+      /* contenedor de cada fila */
+      .stockRow {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 40px;
+        margin: 18px 0;
+      }
+
+      /* etiquetas */
+      .stockRow label {
+        font-size: 48px;
+      }
+
+      /* input numeros */
+      .stockRow input {
+        width: 140px;
+        font-size: 54px;
+        padding: 8px 10px;
+        text-align: center;
+        border-radius: 6px;
+        border: 2px solid #aaa;
+      }
+
+      .modal-content input {
+        width: 140px;
+        font-size: 34px;
+        padding: 8px 10px;
+        text-align: center;
+        border-radius: 6px;
+        border: 2px solid #aaa;
+      }
+
+      /* boton iniciar */
+      .modal-content button {
+        margin-top: 40px;
+        padding: 18px 50px;
+        font-size: 28px;
+        font-weight: bold;
+        background: #e60000;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .modal-content button:hover {
+        background: #b80000;
+      }
+
+      .footer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .stockPanel {
+        display: none;
+        flex: 2;
+        background: #111;
+        padding: 20px;
+        border-radius: 10px;
+        border: 2px solid #333;
+      }
+
+      .stockPanel h3 {
+        margin-top: 0;
+        text-align: center;
+      }
+
+      .stockPanel table {
+        border-collapse: collapse;
+        color: white;
+        font-size: 18px;
+      }
+
+      .stockPanel td,
+      .stockPanel th {
+        border: 1px solid #333;
+        padding: 6px 10px;
+        text-align: center;
+      }
+
+      .stockPanel th {
+        background: #e60000;
+      }
+
+      #btnInventario {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 10px 15px;
+        font-size: 22px;
+        border: none;
+        border-radius: 8px;
+        background: #e60000;
+        color: white;
+        cursor: pointer;
+      }
+
+      #btnInventario:hover {
+        background: #b80000;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="pantalla">
+      <div class="logo">
+        <img src="img/logo.png" />
+        <button id="btnInventario">📦</button>
+      </div>
+
+      <div class="contenedor">
+        <div class="flecha"></div>
+        <br />
+        <canvas id="ruleta" width="600" height="600"></canvas>
+      </div>
+      <br />
+      <button id="girar">GIRAR RULETA</button>
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <p>¡Síguenos en nuestras redes Sociales y gana!</p>
+
+      <div class="footer">
+        <div class="qr-section">
+          <img class="qr" src="img/qr.png" />
+          <div class="redes">
+            <img src="img/linkedin.png" />
+            <img src="img/instagram.png" />
+            <img src="img/facebook.png" />
+          </div>
+        </div>
+
+        <div class="stockPanel">
+          <h3>INVENTARIO</h3>
+
+          <table id="tablaStock">
+            <tr>
+              <th>Premio</th>
+              <th>Stock</th>
+              <th>Entregados</th>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div id="modalGanador" class="modal">
+        <div class="modal-content" id="ganadorTexto"></div>
+      </div>
+
+      <div id="popupStock" class="modal show">
+        <div class="modal-content">
+          <h3>Configurar Stock Inicial</h3>
+
+          <label>Jockey</label>
+          <input id="stock_Jockey_Logo" type="number" value="100" /><br />
+
+          <label>Botella</label>
+          <input id="stock_Botella_Roja_Bombilla" type="number" value="32" /><br />
+
+          <label>Cuaderno</label>
+          <input id="stock_Cuaderno_Diseño" type="number" value="50" /><br />
+
+          <label>Mug Termico</label>
+          <input id="stock_Mug_Termico" type="number" value="25" /><br />
+
+          <label>Libreta</label>
+          <input id="stock_Libreta_Mapa" type="number" value="20" /><br />
+
+          <label>Bandana</label>
+          <input id="stock_Bandana" type="number" value="5" /><br />
+
+          <label>Premio Sorpresa</label>
+          <input id="stock_Premio_Regalo" type="number" value="5" /><br /><br />
+
+          <button onclick="iniciarJuego()">INICIAR RULETA</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const canvas = document.getElementById("ruleta");
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+
+      const centroX = 300;
+      const centroY = 300;
+      const radioRuleta = 260;
+      const radioLuces = 280;
+      const radioMetal = 300;
+      let opciones = [];
+      let imagenes = [];
+      let anguloInicio = 0;
+      let girando = false;
+      let frameLuces = 0;
+      let velocidadLuces = 18;
+      let inventario = {};
+      let premiosEntregados = {};
+
+      // aqui se cargan las opciones de premios y sus imágenes, se espera a que cada imagen cargue antes de continuar para evitar problemas de renderizado
+      async function cargarOpciones() {
+        const listaPremios = [
+          { nombre: "Jockey", archivo: "jockey.png" },
+          { nombre: "Botella", archivo: "bottle.png" },
+          { nombre: "Cuaderno", archivo: "cuaderno.png" },
+          { nombre: "Bandana", archivo: "bandana.jpeg" },
+          { nombre: "Jockey", archivo: "jockey.png" },
+          { nombre: "Mug Termico", archivo: "Mug.jpeg" },
+          { nombre: "Libreta", archivo: "libreta.jpeg" },
+          { nombre: "Premio Sorpresa", archivo: "cajaregalo.png" },
+        ];
+
+        for (let item of listaPremios) {
+          let img = new Image();
+          img.src = "opciones/" + item.archivo;
+          await new Promise((res) => (img.onload = res));
+          imagenes.push(img);
+          opciones.push(item.nombre);
+        }
+
+        dibujar();
+      }
+
+      function iniciarJuego() {
+        inventario = {
+          "Jockey": Number(document.getElementById("stock_Jockey_Logo").value),
+          "Botella": Number(document.getElementById("stock_Botella_Roja_Bombilla").value),
+          "Cuaderno": Number(document.getElementById("stock_Cuaderno_Diseño").value),
+          "Mug Termico": Number(document.getElementById("stock_Mug_Termico").value),
+          "Libreta": Number(document.getElementById("stock_Libreta_Mapa").value),
+          "Bandana": Number(document.getElementById("stock_Bandana").value),
+          "Premio Sorpresa": Number(document.getElementById("stock_Premio_Regalo").value),
+        }; 
+
+        for (let item in inventario) {
+          premiosEntregados[item] = 0;
+        }
+        document.getElementById("popupStock").classList.remove("show");
+        actualizarTabla();
+      }
+
+      function actualizarTabla() {
+        const tabla = document.getElementById("tablaStock");
+        tabla.innerHTML = `
+        <tr>
+        <th>Premio</th>
+        <th>Stock</th>
+        <th>Entregados</th>
+        </tr>`;
+
+        for (let premio in inventario) {
+          tabla.innerHTML += `
+          <tr>
+          <td>${premio}</td>
+          <td>${inventario[premio]}</td>
+          <td>${premiosEntregados[premio]}</td>
+          </tr>`;
+        }
+      }
+
+      function dibujarBordeMetalico() {
+        let gradiente = ctx.createRadialGradient(
+          centroX, centroY, 230, centroX, centroY, 300
+        );
+
+        gradiente.addColorStop(0, "#2b2b2b");
+        gradiente.addColorStop(0.2, "#3a3a3a");
+        gradiente.addColorStop(0.35, "#5a5a5a"); // brillo suave
+        gradiente.addColorStop(0.5, "#1f1f1f");
+        gradiente.addColorStop(0.65, "#4a4a4a"); // reflejo
+        gradiente.addColorStop(0.8, "#2a2a2a");
+        gradiente.addColorStop(1, "#0f0f0f");
+
+        ctx.beginPath();
+        ctx.arc(centroX, centroY, radioMetal, 0, Math.PI * 2);
+        ctx.fillStyle = gradiente;
+        ctx.fill();
+      }
+
+      function dibujarLuces() {
+        let total = 44;
+        for (let i = 0; i < total; i++) {
+          let angulo = (i / total) * Math.PI * 2;
+          let x = centroX + Math.cos(angulo) * radioLuces;
+          let y = centroY + Math.sin(angulo) * radioLuces;
+          ctx.beginPath();
+          let encendida = (i + Math.floor(frameLuces / velocidadLuces)) % 2 === 0;
+          ctx.fillStyle = encendida ? "#ffd700" : "#5a4a00";
+          ctx.arc(x, y, 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        frameLuces++;
+      }
+
+      function dibujarRuleta() {
+        const total = imagenes.length;
+        const angulo = (2 * Math.PI) / total;
+
+        for (let i = 0; i < total; i++) {
+          ctx.beginPath();
+          ctx.fillStyle = i % 2 === 0 ? "#fff" : "#d40000";
+          ctx.moveTo(centroX, centroY);
+          ctx.arc(
+            centroX, centroY, radioRuleta,
+            anguloInicio + i * angulo,
+            anguloInicio + (i + 1) * angulo
+          );
+          ctx.fill();
+          ctx.save();
+          ctx.translate(centroX, centroY);
+          ctx.rotate(anguloInicio + i * angulo + angulo / 2);
+          ctx.drawImage(imagenes[i], 150, -35, 70, 70);
+          ctx.restore();
+        }
+      }
+
+      function dibujar() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        dibujarBordeMetalico();
+        if (opciones.length > 0) {
+          dibujarRuleta();
+        }
+        dibujarLuces();
+      }
+
+      function anunciarGanador() {
+        const total = opciones.length;
+        const anguloPorSeccion = (2 * Math.PI) / total;
+        const anguloAjustado = (anguloInicio + Math.PI / 2) % (2 * Math.PI);
+        const indice = Math.floor((total - anguloAjustado / anguloPorSeccion) % total);
+        const ganador = opciones[indice];
+
+        // Ya aseguramos stock con elegirPremioPorPesoYStock, pero validamos igual
+        if (inventario[ganador] > 0) {
+          inventario[ganador]--;
+          premiosEntregados[ganador]++;
+          actualizarTabla();
+          mostrarMensaje("🎉 ¡Ganaste " + ganador + "!");
+        } else {
+          // Fallback de seguridad
+          mostrarMensaje("❌ SIN STOCK");
+        }
+      }
+
+      // NUEVA LÓGICA DE PROBABILIDAD Y STOCK
+
+      function elegirPremioPorPesoYStock() {
+        let opcionesConPeso = [];
+        
+        // Definimos las probabilidades relativas (a mayor número, más fácil que salga)
+        const configuracionPesos = {
+          "Jockey": 8,
+          "Botella": 6,
+          "Cuaderno": 5,
+          "Mug Termico": 4,
+          "Libreta": 3,
+          "Bandana": 3,
+          "Premio Sorpresa": 1 // 1 de cada 30 aproximadamente, dependiendo del stock
+        };
+
+        for (let premio in inventario) {
+          if (inventario[premio] > 0) {
+            let peso = configuracionPesos[premio] || 10;
+            for (let i = 0; i < peso; i++) {
+              opcionesConPeso.push(premio);
+            }
+          }
+        }
+
+        if (opcionesConPeso.length === 0) return null;
+
+        // Selección aleatoria basada en el array de pesos
+        return opcionesConPeso[Math.floor(Math.random() * opcionesConPeso.length)];
+      }
+      
+      function elegirPremioPorPesoYStock() {
+        let bolsa = [];
+
+        for (let premio in inventario) {
+          let stock = inventario[premio];
+          if (stock <= 0) continue; // Si no hay stock, se salta este premio
+
+          // Asignación de pesos: Premio normal = 10, Premio Sorpresa = 1 (10 veces menos probable)
+          let peso = (premio === "Premio Sorpresa") ? 1 : 10;
+
+          for (let i = 0; i < peso; i++) {
+            bolsa.push(premio);
+          }
+        }
+
+        if (bolsa.length === 0) {
+          return null; // Todos los premios en stock 0
+        }
+
+        return bolsa[Math.floor(Math.random() * bolsa.length)];
+      }
+
+      function girarRuleta() {
+        if (girando) return;
+
+        const premioElegido = elegirPremioPorPesoYStock();
+        
+        if (!premioElegido) {
+          mostrarMensaje("❌ ¡YA NO QUEDAN PREMIOS!");
+          return;
+        }
+
+        girando = true;
+        const total = opciones.length;
+        const anguloPorSeccion = (2 * Math.PI) / total;
+
+        // Buscamos en qué posición(es) del círculo está el premio elegido
+        let indicesPosibles = [];
+        for (let i = 0; i < opciones.length; i++) {
+          if (opciones[i] === premioElegido) {
+            indicesPosibles.push(i);
+          }
+        }
+        
+        const indiceGanador = indicesPosibles[Math.floor(Math.random() * indicesPosibles.length)];
+
+        // CÁLCULO CRÍTICO: 
+        // 1. Compensamos el desfase de dibujo (normalmente la flecha arriba es -90 grados o 1.5 * PI)
+        // 2. Añadimos vueltas completas para el efecto visual
+        const vueltas = 8 + Math.floor(Math.random() * 5); 
+        const anguloMeta = (2 * Math.PI) - (indiceGanador * anguloPorSeccion);
+        const anguloFinal = (vueltas * 2 * Math.PI) + anguloMeta - (anguloPorSeccion / 2);
+
+        const duracion = 8000; // 8 segundos para generar suspenso
+        const inicio = performance.now();
+
+        function animar(t) {
+          let progreso = Math.min((t - inicio) / duracion, 1);
+          
+          // Ease out (frenado suave)
+          const ease = (t) => 1 - Math.pow(1 - t, 4);
+          
+          anguloInicio = anguloFinal * ease(progreso);
+          dibujar();
+
+          if (progreso < 1) {
+            requestAnimationFrame(animar);
+          } else {
+            girando = false;
+            // Forzamos el ángulo final para que la validación de anunciarGanador sea exacta
+            anguloInicio = anguloInicio % (2 * Math.PI);
+            anunciarGanador(); 
+          }
+        }
+        requestAnimationFrame(animar);
+      }
+
+      function animarLuces() {
+        dibujar();
+        requestAnimationFrame(animarLuces);
+      }
+
+      function actualizarTablaPopup() {
+        const tabla = document.getElementById("tablaStockPopup");
+        tabla.innerHTML = `
+        <tr>
+          <th>Premio</th>
+          <th>Stock</th>
+          <th>Entregados</th>
+        </tr>`;
+
+        for (let premio in inventario) {
+          tabla.innerHTML += `
+          <tr>
+            <td>${premio}</td>
+            <td>${inventario[premio]}</td>
+            <td>${premiosEntregados[premio]}</td>
+          </tr>`;
+        }
+      }
+
+      document.getElementById("btnInventario").onclick = () => {
+        document.getElementById("modalInventario").classList.add("show");
+        actualizarTablaPopup();
+      };
+
+      function cerrarInventario() {
+        document.getElementById("modalInventario").classList.remove("show");
+      }
+
+      function mostrarMensaje(texto) {
+        const modal = document.getElementById("modalGanador");
+        const contenido = document.getElementById("ganadorTexto");
+        contenido.innerText = texto;
+        modal.classList.add("show");
+        modal.onclick = () => {
+          modal.classList.remove("show");
+        };
+      }
+
+      document.getElementById("girar").addEventListener("click", girarRuleta);
+      cargarOpciones();
+      animarLuces();
+    </script>
+
+    <div id="modalInventario" class="modal">
+      <div class="modal-content">
+        <h3>INVENTARIO</h3>
+        <table id="tablaStockPopup">
+          <tr>
+            <th>Premio</th>
+            <th>Stock</th>
+            <th>Entregados</th>
+          </tr>
+        </table>
+        <br />
+        <button onclick="cerrarInventario()">CERRAR</button>
+      </div>
+    </div>
+  </body>
+</html>
