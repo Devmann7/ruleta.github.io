@@ -444,8 +444,8 @@
           ctx.save();
           ctx.translate(centroX, centroY);
           // Rotación ajustada al centro de cada segmento de la porción de ruleta
-          ctx.rotate(anguloInicio + i * angulo + angulo / 2);
-          ctx.drawImage(imagenes[i], 140, -35, 70, 70);
+          ctx.rotate(anguloInicio + i * angulo + angulo / 2 );
+          ctx.drawImage(imagenes[i], 130, -55, 90, 90);
           ctx.restore();
         }
       }
@@ -472,17 +472,18 @@
         }
       }
 
+      /*
       // Sistema Unificado de Probabilidades Basado en Pesos Reales
       function elegirPremioPorPesoYStock() {
         let bolsa = [];
         
         // Configuración limpia de pesos modificable
         const configuracionPesos = {
+          "Bandana": 100,
           "Jockey": 50,
           "Botella": 50,
-          "Mug Termico": 24,
           "Libreta": 50,
-          "Bandana": 100,
+          "Mug Termico": 24,
           "Premio Sorpresa": 5 // Muy baja probabilidad intencional
         };
 
@@ -497,6 +498,35 @@
         }
 
         if (bolsa.length === 0) return null;
+        return bolsa[Math.floor(Math.random() * bolsa.length)];
+      }
+        */
+
+      // Sistema de Probabilidad 100% Dinámico basado en el Stock Inicial Ingresado (Corregido)
+      function elegirPremioPorPesoYStock() {
+        let bolsa = [];
+
+        for (let premio in inventario) {
+          let stockActual = inventario[premio]; // <-- Corregido aquí, sin espacios
+          if (stockActual <= 0) continue; 
+
+          // El stock actual se convierte en el peso directo de probabilidad
+          let pesoDinamico = stockActual;
+
+          // Candado para el Premio Sorpresa (mantiene baja su probabilidad)
+          if (premio === "Premio Sorpresa") {
+            pesoDinamico = Math.min(stockActual, 1); 
+          }
+
+          for (let i = 0; i < pesoDinamico; i++) {
+            bolsa.push(premio);
+          }
+        }
+
+        if (bolsa.length === 0) {
+          return null; 
+        }
+
         return bolsa[Math.floor(Math.random() * bolsa.length)];
       }
 
