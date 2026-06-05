@@ -115,7 +115,7 @@
         visibility: hidden;
         opacity: 0;
         transition: 0.3s;
-        z-index: 1000; /* Solución al problema de la flecha sobre el modal */
+        z-index: 1000;
       }
 
       .modal.show {
@@ -126,56 +126,47 @@
       .modal-content {
         background: white;
         color: black;
-        padding: 70px 90px;
+        padding: 50px 70px;
         border-radius: 20px;
-        font-size: 36px;
+        font-size: 30px;
         font-weight: bold;
         box-shadow: 0 0 40px gold;
         text-align: center;
+        max-height: 85vh;
+        overflow-y: auto;
       }
 
-      /* titulo */
       .modal-content h3 {
-        font-size: 28px;
-        margin-bottom: 40px;
+        font-size: 36px;
+        margin-bottom: 25px;
+        color: #da291c;
       }
 
-      /* contenedor de cada fila */
       .stockRow {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 40px;
-        margin: 18px 0;
+        margin: 15px 0;
       }
 
-      /* etiquetas */
       .stockRow label {
-        font-size: 48px;
+        font-size: 28px;
+        text-align: left;
+        flex: 1;
       }
 
-      /* input numeros */
       .stockRow input {
         width: 140px;
-        font-size: 54px;
+        font-size: 28px;
         padding: 8px 10px;
         text-align: center;
         border-radius: 6px;
         border: 2px solid #aaa;
       }
 
-      .modal-content input {
-        width: 140px;
-        font-size: 34px;
-        padding: 8px 10px;
-        text-align: center;
-        border-radius: 6px;
-        border: 2px solid #aaa;
-      }
-
-      /* boton iniciar */
       .modal-content button {
-        margin-top: 40px;
+        margin-top: 30px;
         padding: 18px 50px;
         font-size: 28px;
         font-weight: bold;
@@ -260,13 +251,8 @@
         <canvas id="ruleta" width="600" height="600"></canvas>
       </div>
       <br />
-      <button id="girar">GIRAR RULETA</button>
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
+      <button id="grid" style="display:none;"></button> <button id="girar">GIRAR RULETA</button>
+      <br /><br /><br /><br /><br /><br />
       <p>¡Síguenos en nuestras redes Sociales y gana!</p>
 
       <div class="footer">
@@ -281,7 +267,6 @@
 
         <div class="stockPanel">
           <h3>INVENTARIO</h3>
-
           <table id="tablaStock">
             <tr>
               <th>Premio</th>
@@ -293,33 +278,37 @@
       </div>
 
       <div id="modalGanador" class="modal">
-        <div class="modal-content" id="ganadorTexto"></div>
+        <div class="modal-content" id="ganadorTexto" style="font-size: 45px; padding: 60px;"></div>
       </div>
 
       <div id="popupStock" class="modal show">
         <div class="modal-content">
           <h3>Configurar Stock Inicial</h3>
 
-          <label>Jockey</label>
-          <input id="stock_Jockey_Logo" type="number" value="100" /><br />
-
-          <label>Botella</label>
-          <input id="stock_Botella_Roja_Bombilla" type="number" value="32" /><br />
-
-          <label>Cuaderno</label>
-          <input id="stock_Cuaderno_Diseño" type="number" value="50" /><br />
-
-          <label>Mug Termico</label>
-          <input id="stock_Mug_Termico" type="number" value="25" /><br />
-
-          <label>Libreta</label>
-          <input id="stock_Libreta_Mapa" type="number" value="20" /><br />
-
-          <label>Bandana</label>
-          <input id="stock_Bandana" type="number" value="5" /><br />
-
-          <label>Premio Sorpresa</label>
-          <input id="stock_Premio_Regalo" type="number" value="5" /><br /><br />
+          <div class="stockRow">
+            <label>Jockey</label>
+            <input id="stock_Jockey" type="number" value="100" />
+          </div>
+          <div class="stockRow">
+            <label>Botella</label>
+            <input id="stock_Botella" type="number" value="32" />
+          </div>
+          <div class="stockRow">
+            <label>Mug Tértmico</label>
+            <input id="stock_Mug" type="number" value="25" />
+          </div>
+          <div class="stockRow">
+            <label>Libreta</label>
+            <input id="stock_Libreta" type="number" value="20" />
+          </div>
+          <div class="stockRow">
+            <label>Bandana</label>
+            <input id="stock_Bandana" type="number" value="5" />
+          </div>
+          <div class="stockRow">
+            <label>Premio Sorpresa</label>
+            <input id="stock_Sorpresa" type="number" value="5" />
+          </div>
 
           <button onclick="iniciarJuego()">INICIAR RULETA</button>
         </div>
@@ -345,17 +334,15 @@
       let velocidadLuces = 18;
       let inventario = {};
       let premiosEntregados = {};
+      let premioGanadorActual = null; // Guardará el premio obtenido por backend/lógica antes de girar
 
-      // aqui se cargan las opciones de premios y sus imágenes, se espera a que cada imagen cargue antes de continuar para evitar problemas de renderizado
       async function cargarOpciones() {
         const listaPremios = [
-          { nombre: "Jockey", archivo: "jockey.png" },
+          { nombre: "Jockey", archivo: "Jockey.png" },
           { nombre: "Botella", archivo: "bottle.png" },
-          { nombre: "Cuaderno", archivo: "cuaderno.png" },
-          { nombre: "Bandana", archivo: "bandana.jpeg" },
-          { nombre: "Jockey", archivo: "jockey.png" },
-          { nombre: "Mug Termico", archivo: "Mug.jpeg" },
-          { nombre: "Libreta", archivo: "libreta.jpeg" },
+          { nombre: "Bandana", archivo: "Bandana.png" },
+          { nombre: "Mug Termico", archivo: "Mug.png" },
+          { nombre: "Libreta", archivo: "Libreta.jpeg" },
           { nombre: "Premio Sorpresa", archivo: "cajaregalo.png" },
         ];
 
@@ -366,19 +353,17 @@
           imagenes.push(img);
           opciones.push(item.nombre);
         }
-
         dibujar();
       }
 
       function iniciarJuego() {
         inventario = {
-          "Jockey": Number(document.getElementById("stock_Jockey_Logo").value),
-          "Botella": Number(document.getElementById("stock_Botella_Roja_Bombilla").value),
-          "Cuaderno": Number(document.getElementById("stock_Cuaderno_Diseño").value),
-          "Mug Termico": Number(document.getElementById("stock_Mug_Termico").value),
-          "Libreta": Number(document.getElementById("stock_Libreta_Mapa").value),
+          "Jockey": Number(document.getElementById("stock_Jockey").value),
+          "Botella": Number(document.getElementById("stock_Botella").value),
+          "Mug Termico": Number(document.getElementById("stock_Mug").value),
+          "Libreta": Number(document.getElementById("stock_Libreta").value),
           "Bandana": Number(document.getElementById("stock_Bandana").value),
-          "Premio Sorpresa": Number(document.getElementById("stock_Premio_Regalo").value),
+          "Premio Sorpresa": Number(document.getElementById("stock_Sorpresa").value),
         }; 
 
         for (let item in inventario) {
@@ -390,19 +375,20 @@
 
       function actualizarTabla() {
         const tabla = document.getElementById("tablaStock");
+        if(!tabla) return;
         tabla.innerHTML = `
         <tr>
-        <th>Premio</th>
-        <th>Stock</th>
-        <th>Entregados</th>
+          <th>Premio</th>
+          <th>Stock</th>
+          <th>Entregados</th>
         </tr>`;
 
         for (let premio in inventario) {
           tabla.innerHTML += `
           <tr>
-          <td>${premio}</td>
-          <td>${inventario[premio]}</td>
-          <td>${premiosEntregados[premio]}</td>
+            <td>${premio}</td>
+            <td>${inventario[premio]}</td>
+            <td>${premiosEntregados[premio]}</td>
           </tr>`;
         }
       }
@@ -411,12 +397,11 @@
         let gradiente = ctx.createRadialGradient(
           centroX, centroY, 230, centroX, centroY, 300
         );
-
         gradiente.addColorStop(0, "#2b2b2b");
         gradiente.addColorStop(0.2, "#3a3a3a");
-        gradiente.addColorStop(0.35, "#5a5a5a"); // brillo suave
+        gradiente.addColorStop(0.35, "#5a5a5a");
         gradiente.addColorStop(0.5, "#1f1f1f");
-        gradiente.addColorStop(0.65, "#4a4a4a"); // reflejo
+        gradiente.addColorStop(0.65, "#4a4a4a");
         gradiente.addColorStop(0.8, "#2a2a2a");
         gradiente.addColorStop(1, "#0f0f0f");
 
@@ -442,7 +427,7 @@
       }
 
       function dibujarRuleta() {
-        const total = imagenes.length;
+        const total = opciones.length;
         const angulo = (2 * Math.PI) / total;
 
         for (let i = 0; i < total; i++) {
@@ -455,10 +440,12 @@
             anguloInicio + (i + 1) * angulo
           );
           ctx.fill();
+          
           ctx.save();
           ctx.translate(centroX, centroY);
+          // Rotación ajustada al centro de cada segmento de la porción de ruleta
           ctx.rotate(anguloInicio + i * angulo + angulo / 2);
-          ctx.drawImage(imagenes[i], 150, -35, 70, 70);
+          ctx.drawImage(imagenes[i], 140, -35, 70, 70);
           ctx.restore();
         }
       }
@@ -473,74 +460,43 @@
       }
 
       function anunciarGanador() {
-        const total = opciones.length;
-        const anguloPorSeccion = (2 * Math.PI) / total;
-        const anguloAjustado = (anguloInicio + Math.PI / 2) % (2 * Math.PI);
-        const indice = Math.floor((total - anguloAjustado / anguloPorSeccion) % total);
-        const ganador = opciones[indice];
+        const ganador = premioGanadorActual;
 
-        // Ya aseguramos stock con elegirPremioPorPesoYStock, pero validamos igual
-        if (inventario[ganador] > 0) {
+        if (ganador && inventario[ganador] > 0) {
           inventario[ganador]--;
           premiosEntregados[ganador]++;
           actualizarTabla();
           mostrarMensaje("🎉 ¡Ganaste " + ganador + "!");
         } else {
-          // Fallback de seguridad
-          mostrarMensaje("❌ SIN STOCK");
+          mostrarMensaje("❌ SIN STOCK O ERROR");
         }
       }
 
-      // NUEVA LÓGICA DE PROBABILIDAD Y STOCK
-
+      // Sistema Unificado de Probabilidades Basado en Pesos Reales
       function elegirPremioPorPesoYStock() {
-        let opcionesConPeso = [];
+        let bolsa = [];
         
-        // Definimos las probabilidades relativas (a mayor número, más fácil que salga)
+        // Configuración limpia de pesos modificable
         const configuracionPesos = {
-          "Jockey": 8,
-          "Botella": 6,
-          "Cuaderno": 5,
-          "Mug Termico": 4,
-          "Libreta": 3,
-          "Bandana": 3,
-          "Premio Sorpresa": 1 // 1 de cada 30 aproximadamente, dependiendo del stock
+          "Jockey": 10,
+          "Botella": 8,
+          "Mug Termico": 6,
+          "Libreta": 5,
+          "Bandana": 4,
+          "Premio Sorpresa": 1 // Muy baja probabilidad intencional
         };
 
         for (let premio in inventario) {
-          if (inventario[premio] > 0) {
-            let peso = configuracionPesos[premio] || 10;
-            for (let i = 0; i < peso; i++) {
-              opcionesConPeso.push(premio);
-            }
-          }
-        }
-
-        if (opcionesConPeso.length === 0) return null;
-
-        // Selección aleatoria basada en el array de pesos
-        return opcionesConPeso[Math.floor(Math.random() * opcionesConPeso.length)];
-      }
-      
-      function elegirPremioPorPesoYStock() {
-        let bolsa = [];
-
-        for (let premio in inventario) {
           let stock = inventario[premio];
-          if (stock <= 0) continue; // Si no hay stock, se salta este premio
+          if (stock <= 0) continue; 
 
-          // Asignación de pesos: Premio normal = 10, Premio Sorpresa = 1 (10 veces menos probable)
-          let peso = (premio === "Premio Sorpresa") ? 1 : 10;
-
+          let peso = configuracionPesos[premio] || 5;
           for (let i = 0; i < peso; i++) {
             bolsa.push(premio);
           }
         }
 
-        if (bolsa.length === 0) {
-          return null; // Todos los premios en stock 0
-        }
-
+        if (bolsa.length === 0) return null;
         return bolsa[Math.floor(Math.random() * bolsa.length)];
       }
 
@@ -554,35 +510,30 @@
           return;
         }
 
+        premioGanadorActual = premioElegido; // Fijamos el premio inequívocamente
         girando = true;
+        
         const total = opciones.length;
         const anguloPorSeccion = (2 * Math.PI) / total;
 
-        // Buscamos en qué posición(es) del círculo está el premio elegido
-        let indicesPosibles = [];
-        for (let i = 0; i < opciones.length; i++) {
-          if (opciones[i] === premioElegido) {
-            indicesPosibles.push(i);
-          }
-        }
+        // Encontrar índice del premio seleccionado en la ruleta visual
+        const indiceGanador = opciones.indexOf(premioGanadorActual);
+
+        const vueltas = 6 + Math.floor(Math.random() * 4); 
         
-        const indiceGanador = indicesPosibles[Math.floor(Math.random() * indicesPosibles.length)];
+        // MATEMÁTICA EXACTA DE COLISIÓN CON LA FLECHA SUPERIOR (Ubicada a las 12 en punto / -90 grados)
+        // Calculamos cuánto rotar para que el centro exacto del slice quede apuntando arriba.
+        const anguloMeta = (2 * Math.PI) - (indiceGanador * anguloPorSeccion) - (anguloPorSeccion / 2) - (Math.PI / 2);
+        
+        // Normalizamos el ángulo final sumándole las vueltas completas
+        const anguloFinal = (vueltas * 2 * Math.PI) + ((anguloMeta + (2 * Math.PI)) % (2 * Math.PI));
 
-        // CÁLCULO CRÍTICO: 
-        // 1. Compensamos el desfase de dibujo (normalmente la flecha arriba es -90 grados o 1.5 * PI)
-        // 2. Añadimos vueltas completas para el efecto visual
-        const vueltas = 8 + Math.floor(Math.random() * 5); 
-        const anguloMeta = (2 * Math.PI) - (indiceGanador * anguloPorSeccion);
-        const anguloFinal = (vueltas * 2 * Math.PI) + anguloMeta - (anguloPorSeccion / 2);
-
-        const duracion = 8000; // 8 segundos para generar suspenso
+        const duracion = 5000; // Reducido a 5 segundos para mantener mejor ritmo de juego
         const inicio = performance.now();
 
         function animar(t) {
           let progreso = Math.min((t - inicio) / duracion, 1);
-          
-          // Ease out (frenado suave)
-          const ease = (t) => 1 - Math.pow(1 - t, 4);
+          const ease = (t) => 1 - Math.pow(1 - t, 4); // Desaceleración fluida tipo Quartic
           
           anguloInicio = anguloFinal * ease(progreso);
           dibujar();
@@ -591,7 +542,6 @@
             requestAnimationFrame(animar);
           } else {
             girando = false;
-            // Forzamos el ángulo final para que la validación de anunciarGanador sea exacta
             anguloInicio = anguloInicio % (2 * Math.PI);
             anunciarGanador(); 
           }
@@ -600,12 +550,15 @@
       }
 
       function animarLuces() {
-        dibujar();
+        if (!girando) {
+          dibujar(); // Sigue parpadeando el borde de luces aun detenido
+        }
         requestAnimationFrame(animarLuces);
       }
 
       function actualizarTablaPopup() {
         const tabla = document.getElementById("tablaStockPopup");
+        if(!tabla) return;
         tabla.innerHTML = `
         <tr>
           <th>Premio</th>
@@ -649,7 +602,7 @@
 
     <div id="modalInventario" class="modal">
       <div class="modal-content">
-        <h3>INVENTARIO</h3>
+        <h3>INVENTARIO ACTUAL</h3>
         <table id="tablaStockPopup">
           <tr>
             <th>Premio</th>
