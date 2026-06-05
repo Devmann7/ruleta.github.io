@@ -287,23 +287,23 @@
 
           <div class="stockRow">
             <label>Jockey</label>
-            <input id="stock_Jockey" type="number" value="100" />
+            <input id="stock_Jockey" type="number" value="50" />
           </div>
           <div class="stockRow">
             <label>Botella</label>
-            <input id="stock_Botella" type="number" value="32" />
+            <input id="stock_Botella" type="number" value="50" />
           </div>
           <div class="stockRow">
             <label>Mug Tértmico</label>
-            <input id="stock_Mug" type="number" value="25" />
+            <input id="stock_Mug" type="number" value="24" />
           </div>
           <div class="stockRow">
             <label>Libreta</label>
-            <input id="stock_Libreta" type="number" value="20" />
+            <input id="stock_Libreta" type="number" value="50" />
           </div>
           <div class="stockRow">
             <label>Bandana</label>
-            <input id="stock_Bandana" type="number" value="5" />
+            <input id="stock_Bandana" type="number" value="100" />
           </div>
           <div class="stockRow">
             <label>Premio Sorpresa</label>
@@ -478,19 +478,19 @@
         
         // Configuración limpia de pesos modificable
         const configuracionPesos = {
-          "Jockey": 10,
-          "Botella": 8,
-          "Mug Termico": 6,
-          "Libreta": 5,
-          "Bandana": 4,
-          "Premio Sorpresa": 1 // Muy baja probabilidad intencional
+          "Jockey": 50,
+          "Botella": 50,
+          "Mug Termico": 24,
+          "Libreta": 50,
+          "Bandana": 100,
+          "Premio Sorpresa": 5 // Muy baja probabilidad intencional
         };
 
         for (let premio in inventario) {
           let stock = inventario[premio];
           if (stock <= 0) continue; 
 
-          let peso = configuracionPesos[premio] || 5;
+          let peso = configuracionPesos[premio] || 10;
           for (let i = 0; i < peso; i++) {
             bolsa.push(premio);
           }
